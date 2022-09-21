@@ -15,13 +15,21 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("text")
     parser.add_argument("language")
-    parser.add_argument("--dict_name", nargs="*", dest="dicts")
+    parser.add_argument("--dict_names", nargs="*", dest="dicts")
+    parser.add_argument("--disabled_rules", nargs="*")
     args = parser.parse_args()
 
     logger.info("Using dictionaries %s", str(args.dicts))
 
     checker = LanguageToolChecker()
-    matches = checker.check_text(args.text, args.language, dict_names=args.dicts)
+
+    kwargs = {}
+    if args.disabled_rules:
+        kwargs["disabledRules"] = ",".join(args.disabled_rules)
+
+    matches = checker.check_text(
+        args.text, args.language, dict_names=args.dicts, **kwargs
+    )
 
     if not matches:
         print("Found no errors!")
