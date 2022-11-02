@@ -6,7 +6,8 @@ updates:
     schedule:
       interval: "weekly"
     ignore:
-      - dependency-type: "development"
+      - dependency-name: "*"
+        dependency-type: "development"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
