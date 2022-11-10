@@ -62,7 +62,6 @@ class LanguageToolAbstract:
     """
 
     NO_PREMIUM_MSG = "Calling LanguageTool API without premium key"
-    BASIC_URL = "https://api.languagetoolplus.com/v2"
 
     # API key names
     OFFSET_KEY = "offset"
@@ -74,6 +73,7 @@ class LanguageToolAbstract:
         self,
         username: Optional[str] = None,
         api_key: Optional[str] = None,
+        basic_url: Optional[str] = None,
     ) -> None:
         self.username = _get_optional_arg_value(
             username,
@@ -84,6 +84,9 @@ class LanguageToolAbstract:
             api_key,
             "LT_API_KEY",
             env_var_msg="Using API key from environment variable",
+        )
+        self.basic_url = (
+            "https://api.languagetoolplus.com/v2" if basic_url is None else basic_url
         )
 
         self.use_premium = not (self.username is None or self.api_key is None)
@@ -101,10 +104,6 @@ class LanguageToolDictManager(LanguageToolAbstract):
     This class handles the interaction with LanguageTool dictionaries.
     """
 
-    GET_WORDS_URL = LanguageToolAbstract.BASIC_URL + "/words"
-    ADD_WORDS_URL = GET_WORDS_URL + "/add"
-    DELETE_WORDS_URL = GET_WORDS_URL + "/delete"
-
     # API keys
     LIMIT_KEY = "limit"
     DICT_KEY = "dict"
@@ -117,10 +116,15 @@ class LanguageToolDictManager(LanguageToolAbstract):
         self,
         username: Optional[str] = None,
         api_key: Optional[str] = None,
+        basic_url: Optional[str] = None,
         api_chunk_size: int = 100,
     ) -> None:
-        super().__init__(username, api_key)
+        super().__init__(username=username, api_key=api_key, basic_url=basic_url)
         self.api_chunk_size = api_chunk_size
+
+        self.get_words_url = urllib.parse.urljoin(self.basic_url, "words")
+        self.add_words_url = urllib.parse.urljoin(self.get_words_url, "add")
+        self.delete_words_url = urllib.parse.urljoin(self.get_words_url, "delete")
 
     def _dict_words_helper(
         self, offset: int, limit: int, dict_names: Optional[Sequence[str]] = None
@@ -135,7 +139,7 @@ class LanguageToolDictManager(LanguageToolAbstract):
 
         encoded_data = urllib.parse.urlencode(data)
         json_response = _send_to_api(
-            HTTP_GET_METHOD, self.GET_WORDS_URL + "?" + encoded_data, {}
+            HTTP_GET_METHOD, self.get_words_url + "?" + encoded_data, {}
         )
         return json_response[self.WORDS_KEY]
 
@@ -164,7 +168,7 @@ class LanguageToolDictManager(LanguageToolAbstract):
     def _single_word_helper(
         self, is_add_action: bool, word: str, dict_name: Optional[str] = None
     ) -> bool:
-        url = self.ADD_WORDS_URL if is_add_action else self.DELETE_WORDS_URL
+        url = self.add_words_url if is_add_action else self.delete_words_url
         result_key = self.IS_ADDED_KEY if is_add_action else self.IS_DELETED_KEY
 
         data = {self.WORD_KEY: word}
@@ -233,8 +237,6 @@ class LanguageToolChecker(LanguageToolAbstract):
     This class handles LanguageTool API interactions concerning text check.
     """
 
-    CHECK_TEXT_URL = LanguageToolAbstract.BASIC_URL + "/check"
-
     # API keys
     TEXT_KEY = "text"
     LANGUAGE_KEY = "language"
@@ -251,6 +253,15 @@ class LanguageToolChecker(LanguageToolAbstract):
     MESSAGE_KEY = "message"
     SHORT_MESSAGE_KEY = "shortMessage"
 
+    def __init__(
+        self,
+        username: Optional[str] = None,
+        api_key: Optional[str] = None,
+        basic_url: Optional[str] = None,
+    ) -> None:
+        super().__init__(username, api_key, basic_url)
+        self.check_text_url = urllib.parse.urljoin(self.basic_url, "check")
+
     def check_text(
         self,
         text: str,
@@ -264,7 +275,7 @@ class LanguageToolChecker(LanguageToolAbstract):
             data[self.DICTS_KEY] = ",".join(dict_names)
         data.update(kwargs)
 
-        json_response = _send_to_api(HTTP_POST_METHOD, self.CHECK_TEXT_URL, data)
+        json_response = _send_to_api(HTTP_POST_METHOD, self.check_text_url, data)
         matches = []
         for json_match in json_response[self.MATCHES_KEY]:
             json_rule = json_match[self.RULE_KEY]
