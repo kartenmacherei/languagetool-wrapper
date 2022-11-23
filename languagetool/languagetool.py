@@ -5,6 +5,7 @@ import requests
 import urllib.parse
 import os
 import logging
+import posixpath
 
 from languagetool.data import LTMatch, LTRule
 
@@ -86,7 +87,7 @@ class LanguageToolAbstract:
             env_var_msg="Using API key from environment variable",
         )
         self.basic_url = (
-            "https://api.languagetoolplus.com/v2" if basic_url is None else basic_url
+            "https://api.languagetoolplus.com/v2/" if basic_url is None else basic_url
         )
 
         self.use_premium = not (self.username is None or self.api_key is None)
@@ -122,9 +123,9 @@ class LanguageToolDictManager(LanguageToolAbstract):
         super().__init__(username=username, api_key=api_key, basic_url=basic_url)
         self.api_chunk_size = api_chunk_size
 
-        self.get_words_url = urllib.parse.urljoin(self.basic_url, "words")
-        self.add_words_url = urllib.parse.urljoin(self.get_words_url, "add")
-        self.delete_words_url = urllib.parse.urljoin(self.get_words_url, "delete")
+        self.get_words_url = posixpath.join(self.basic_url, "words")
+        self.add_words_url = posixpath.join(self.get_words_url, "add")
+        self.delete_words_url = posixpath.join(self.get_words_url, "delete")
 
     def _dict_words_helper(
         self, offset: int, limit: int, dict_names: Optional[Sequence[str]] = None
@@ -260,7 +261,7 @@ class LanguageToolChecker(LanguageToolAbstract):
         basic_url: Optional[str] = None,
     ) -> None:
         super().__init__(username, api_key, basic_url)
-        self.check_text_url = urllib.parse.urljoin(self.basic_url, "check")
+        self.check_text_url = posixpath.join(self.basic_url, "check")
 
     def check_text(
         self,
