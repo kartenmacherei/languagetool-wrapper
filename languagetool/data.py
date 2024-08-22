@@ -27,6 +27,17 @@ class LTRule:
 
 
 @dataclass
+class LTContext:
+    """
+    This class holds information about the context of a LanguageTool match.
+    """
+
+    text: str
+    offset: int
+    length: int
+
+
+@dataclass
 class LTMatch:
     """
     This class holds a single match from language tool,
@@ -45,6 +56,7 @@ class LTMatch:
     replacements: tuple[str, ...]
     message: str
     short_message: str
+    context: LTContext
 
 
 @dataclass
