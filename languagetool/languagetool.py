@@ -7,7 +7,7 @@ import os
 import logging
 import posixpath
 
-from languagetool.data import LTMatch, LTRule
+from languagetool.data import LTContext, LTMatch, LTRule
 
 
 logger = logging.getLogger(__name__)
@@ -253,6 +253,7 @@ class LanguageToolChecker(LanguageToolAbstract):
     REPLACEMENTS_KEY = "replacements"
     MESSAGE_KEY = "message"
     SHORT_MESSAGE_KEY = "shortMessage"
+    CONTEXT_KEY = "context"
 
     def __init__(
         self,
@@ -289,6 +290,11 @@ class LanguageToolChecker(LanguageToolAbstract):
                     json_rule[self.CATEGORY_KEY][self.NAME_KEY],
                 ),
             )
+            context = LTContext(
+                json_match[self.CONTEXT_KEY][self.TEXT_KEY],
+                json_match[self.CONTEXT_KEY][self.OFFSET_KEY],
+                json_match[self.CONTEXT_KEY][self.LENGTH_KEY],
+            )
 
             match = LTMatch(
                 rule,
@@ -300,6 +306,7 @@ class LanguageToolChecker(LanguageToolAbstract):
                 ),
                 json_match[self.MESSAGE_KEY],
                 json_match[self.SHORT_MESSAGE_KEY],
+                context,
             )
             matches.append(match)
         return matches
