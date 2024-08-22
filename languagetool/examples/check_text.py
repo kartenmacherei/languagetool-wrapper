@@ -50,6 +50,8 @@ if __name__ == "__main__":
         print("=#=", "Error", i, "=#=")
         print(match.message)
         print(match.start, match.end)
+        print(args.text[match.start : match.end])
         print(match.rule)
         print("Suggestions:", match.replacements)
+        print(match.context)
         print(20 * "=")
